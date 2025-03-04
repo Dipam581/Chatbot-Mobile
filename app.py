@@ -10,6 +10,7 @@ from langchain.agents import tool
 import requests
 import urllib.parse
 
+os.environ["GROQ_API_KEY"] = "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"
 
 
 def build_search_url(query, page=0, size=10, keep_casing=True):
@@ -55,18 +56,45 @@ def mobile_specific_data():
 
     response = requests.get(url, headers=headers)
 
+@tool
+def get_all_mobile_data():
+    """ Returns all types of brands mobile data """
 
-os.environ["GROQ_API_KEY"] = "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"
+    url = "https://mobile-phone-specs-database.p.rapidapi.com/gsm/all-brands"
+
+    headers = {
+        "x-rapidapi-key": "517b6a7ccdmsh09b724099070929p1709a0jsn337969857059",
+        "x-rapidapi-host": "mobile-phone-specs-database.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+    return response.json()
+
+@tool
+def get_brands_data(brand: str = "Apple"):
+    """ Returns specific brand of mobile data and its specifications """
+
+    url = f"https://mobile-phone-specs-database.p.rapidapi.com/gsm/get-models-by-brandname/{brand}"
+
+    headers = {
+        "x-rapidapi-key": "517b6a7ccdmsh09b724099070929p1709a0jsn337969857059",
+        "x-rapidapi-host": "mobile-phone-specs-database.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    return response.json()
+
 
 llm = init_chat_model("deepseek-r1-distill-llama-70b", model_provider="groq")
 
 
 
-query = "What is the current time in London? (You are in India). Just show the current time and not the date"
+query = "Which varient should I buy from samsung on 2025?"
 
 prompt_template = hub.pull("hwchase17/react")
 
-tools = [get_system_time]
+tools = [get_all_mobile_data, get_brands_data]  #mobile_brand_data, mobile_specific_data
 
 agent = create_react_agent(llm, tools, prompt_template)
 
